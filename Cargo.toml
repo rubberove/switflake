@@ -1,0 +1,19 @@
+[package]
+name = "switflake"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.70.0"
+description = "A swift, wait-free unique ID generator with thread-aware sequencing"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/yourusername/switflake"
+keywords = ["id-generator", "unique-id", "wait-free", "thread-safe", "distributed"]
+categories = ["concurrency", "data-structures"]
+
+[dependencies]
+
+[dev-dependencies]
+criterion = "0.5"
+
+[[bench]]
+name = "bench"
+harness = false
