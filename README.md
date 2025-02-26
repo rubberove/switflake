@@ -12,8 +12,3 @@ A swift, wait-free unique ID generator with thread-aware sequencing in Rust.
 - 41 bits: Timestamp (69.7 years).
 - 12 bits: Node ID (4,096 nodes).
 - 11 bits: Sequence (2,048 IDs per millisecond, including 3-bit thread ID and 8-bit counter).
-
-## Installation
-```toml
-[dependencies]
-switflake = "0.1.0"
