@@ -46,8 +46,6 @@ impl ThreadIdPool {
     }
 }
 
-/// Switflake: A wait-free unique ID generator with thread-aware sequencing
-#[derive(Clone)]
 pub struct Switflake {
     node_id: u64,
     thread_id: u8,
@@ -55,8 +53,6 @@ pub struct Switflake {
 }
 
 impl Switflake {
-    /// Creates a new Switflake instance
-    /// - `node_id`: Node identifier (0 ~ 4095)
     pub fn new(node_id: u64) -> Result<Self, &'static str> {
         let pool = ThreadIdPool::global();
         if pool.is_full() {
@@ -70,8 +66,6 @@ impl Switflake {
         })
     }
 
-    /// Generates a unique 64-bit ID
-    /// - 41-bit timestamp | 12-bit node ID | 11-bit sequence (3-bit thread ID + 8-bit counter)
     #[inline]
     pub fn generate_id(&mut self) -> Result<u64, &'static str> {
         if self.local_counter == 0xFF {
@@ -90,7 +84,6 @@ impl Switflake {
     }
 }
 
-// TODO: Find alternatives
 impl Drop for Switflake {
     fn drop(&mut self) {
         ThreadIdPool::global().release(self.thread_id);
@@ -117,16 +110,26 @@ mod tests {
     #[test]
     fn test_pool_full_and_reuse() {
         let mut handles = Vec::new();
+        // 스레드 8개
         for _ in 0..8 {
-            let mut swit = Switflake::new(1).expect("Failed to create Switflake");
+            let mut swit = match Switflake::new(1) {
+                Ok(swit) => swit,
+                Err(e) => panic!("Unexpected error during setup: {}", e),
+            };
             handles.push(thread::spawn(move || {
                 let _ = swit.generate_id().expect("Failed to generate ID");
             }));
         }
-        assert!(Switflake::new(1).is_err(), "Should fail when pool is full");
+
+        // 스레드 꽉차면
         for handle in handles {
             handle.join().expect("Thread join failed");
         }
+
+        // 생서앟면 에러
+        assert!(Switflake::new(1).is_err(), "Should fail when pool is full");
+
+        // 근데 종료하면 생성이 가능
         let mut swit = Switflake::new(1).expect("Failed to create Switflake after reuse");
         assert!(swit.generate_id().is_ok());
     }
