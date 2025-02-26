@@ -70,15 +70,6 @@ impl Switflake {
         })
     }
 
-    /// Creates a Switflake using NODE_ID environment variable
-    pub fn new_from_env() -> Result<Self, &'static str> {
-        let node_id = std::env::var("NODE_ID")
-            .unwrap_or("0".to_string())
-            .parse()
-            .map_err(|_| "Invalid NODE_ID")?;
-        Self::new(node_id)
-    }
-
     /// Generates a unique 64-bit ID
     /// - 41-bit timestamp | 12-bit node ID | 11-bit sequence (3-bit thread ID + 8-bit counter)
     #[inline]
@@ -99,6 +90,7 @@ impl Switflake {
     }
 }
 
+// TODO: Find alternatives
 impl Drop for Switflake {
     fn drop(&mut self) {
         ThreadIdPool::global().release(self.thread_id);
@@ -178,13 +170,5 @@ mod tests {
             8 * 64,
             "Not all IDs were unique across threads"
         );
-    }
-
-    #[test]
-    fn test_env_invalid_node_id() {
-        std::env::set_var("NODE_ID", "invalid");
-        let result = Switflake::new_from_env();
-        assert!(result.is_err());
-        assert_eq!(result.err().unwrap(), "Invalid NODE_ID");
     }
 }
