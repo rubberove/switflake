@@ -14,6 +14,7 @@ A swift, wait-free unique ID generator with thread-aware sequencing in Rust.
 - 11 bits: Sequence (2,048 IDs per millisecond, including 3-bit thread ID and 8-bit counter).
 
 ## TODOS
+- [ ] Change bitmasking design
 - [ ] Create well-formatted documentation
 - [ ] Performance comparison
 - [ ] Conduct real-world testing
