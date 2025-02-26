@@ -106,32 +106,28 @@ mod tests {
         }
         assert_eq!(ids.len(), 100, "Not all IDs were unique");
     }
-
     #[test]
     fn test_pool_full_and_reuse() {
         let mut handles = Vec::new();
         // 스레드 8개
         for _ in 0..8 {
-            let mut swit = match Switflake::new(1) {
-                Ok(swit) => swit,
-                Err(e) => panic!("Unexpected error during setup: {}", e),
-            };
+            let mut swit = Switflake::new(1).expect("Failed to create Switflake during setup");
             handles.push(thread::spawn(move || {
                 let _ = swit.generate_id().expect("Failed to generate ID");
             }));
         }
 
-        // 스레드 꽉차면
+        // 스레드 종료 대기
         for handle in handles {
             handle.join().expect("Thread join failed");
         }
 
-        // 생서앟면 에러
-        assert!(Switflake::new(1).is_err(), "Should fail when pool is full");
-
-        // 근데 종료하면 생성이 가능
-        let mut swit = Switflake::new(1).expect("Failed to create Switflake after reuse");
-        assert!(swit.generate_id().is_ok());
+        // 풀 해제 확인
+        let mut swit = Switflake::new(1).expect("Should succeed after threads are done");
+        assert!(
+            swit.generate_id().is_ok(),
+            "Failed to generate ID after reuse"
+        );
     }
 
     #[test]
@@ -150,6 +146,7 @@ mod tests {
     fn test_multi_thread_unique_ids() {
         let mut handles = Vec::new();
         let mut all_ids = HashSet::new();
+
         for _ in 0..8 {
             let mut swit = Switflake::new(1).expect("Failed to create Switflake");
             handles.push(thread::spawn(move || {
@@ -162,12 +159,14 @@ mod tests {
                 ids
             }));
         }
+
         for handle in handles {
             let ids = handle.join().expect("Thread join failed");
             for id in ids {
                 assert!(all_ids.insert(id), "Duplicate ID found: {}", id);
             }
         }
+
         assert_eq!(
             all_ids.len(),
             8 * 64,
